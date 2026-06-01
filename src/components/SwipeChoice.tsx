@@ -23,23 +23,43 @@ export const SwipeChoice: React.FC<SwipeChoiceProps> = ({
   const rightChoice = event.choices?.[1];
 
   const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const dragOffsetRef = useRef<number>(0);
   const isMouseDown = useRef<boolean>(false);
   const mouseStartX = useRef<number>(0);
-  const swipeThreshold = 80; // 確定に必要なスワイプピクセル数
+  const swipeThreshold = 56; // スマホで軽くフリックして決まる距離
+  const maxDragOffset = 180;
+
+  const updateDragOffset = (offset: number) => {
+    const clamped = Math.max(-maxDragOffset, Math.min(maxDragOffset, offset));
+    dragOffsetRef.current = clamped;
+    setDragOffset(clamped);
+  };
+
+  const resetDragOffset = () => {
+    dragOffsetRef.current = 0;
+    setDragOffset(0);
+  };
 
   // 1. タッチイベント（スマホ用）
   const handleTouchStart = (e: React.TouchEvent) => {
     if (coolDownActive) return;
     touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (touchStartX.current === null || coolDownActive) return;
     const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
     const diffX = currentX - touchStartX.current;
+    const diffY = currentY - (touchStartY.current ?? currentY);
+
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 6) {
+      e.preventDefault();
+    }
     
-    // ドラッグ距離を設定
-    setDragOffset(diffX);
+    updateDragOffset(diffX);
   };
 
   const handleTouchEnd = () => {
@@ -47,6 +67,7 @@ export const SwipeChoice: React.FC<SwipeChoiceProps> = ({
     
     processSwipe();
     touchStartX.current = null;
+    touchStartY.current = null;
   };
 
   // 2. マウスイベント（PCドラッグ用）
@@ -59,7 +80,7 @@ export const SwipeChoice: React.FC<SwipeChoiceProps> = ({
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isMouseDown.current || coolDownActive) return;
     const diffX = e.clientX - mouseStartX.current;
-    setDragOffset(diffX);
+    updateDragOffset(diffX);
   };
 
   const handleMouseUpOrLeave = () => {
@@ -70,20 +91,23 @@ export const SwipeChoice: React.FC<SwipeChoiceProps> = ({
 
   // 3. スワイプ確定処理
   const processSwipe = () => {
-    const offset = dragOffset;
-    setDragOffset(0); // リセット
+    const offset = dragOffsetRef.current;
+    resetDragOffset();
 
     if (isLifeEvent) {
       // ライフイベントは一定以上のスワイプ（左右どちらでも）で次に進む
       if (Math.abs(offset) >= swipeThreshold) {
+        window.navigator.vibrate?.(18);
         onNext();
       }
       return;
     }
 
     if (offset <= -swipeThreshold && leftChoice) {
+      window.navigator.vibrate?.(18);
       onChoice(leftChoice.id, leftChoice.label);
     } else if (offset >= swipeThreshold && rightChoice) {
+      window.navigator.vibrate?.(18);
       onChoice(rightChoice.id, rightChoice.label);
     }
   };
@@ -93,12 +117,13 @@ export const SwipeChoice: React.FC<SwipeChoiceProps> = ({
     const handleGlobalMouseUp = () => {
       if (isMouseDown.current) {
         isMouseDown.current = false;
+        dragOffsetRef.current = 0;
         setDragOffset(0);
       }
     };
     window.addEventListener('mouseup', handleGlobalMouseUp);
     return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
-  }, [dragOffset, setDragOffset]);
+  }, [setDragOffset]);
 
   // クリック時の直接決定処理
   const handleChoiceClick = (choiceId: string, label: string) => {
@@ -133,10 +158,10 @@ export const SwipeChoice: React.FC<SwipeChoiceProps> = ({
             style={styles.nextButton}
             disabled={coolDownActive}
           >
-            人生を進める (タップ)
+            タップで進む
           </button>
           <div style={styles.swipeHint}>
-            ← 左右にスワイプしても進みます →
+            左右どちらへフリックしても進みます
           </div>
         </div>
       ) : (
@@ -151,7 +176,7 @@ export const SwipeChoice: React.FC<SwipeChoiceProps> = ({
             }}
             disabled={coolDownActive}
           >
-            <span style={styles.arrow}>←</span>
+            <span style={{ ...styles.arrow, ...styles.arrowLeft }}>←</span>
             <span style={styles.label}>{leftChoice?.label}</span>
           </button>
 
@@ -166,7 +191,7 @@ export const SwipeChoice: React.FC<SwipeChoiceProps> = ({
             disabled={coolDownActive}
           >
             <span style={styles.label}>{rightChoice?.label}</span>
-            <span style={styles.arrow}>→</span>
+            <span style={{ ...styles.arrow, ...styles.arrowRight }}>→</span>
           </button>
         </div>
       )}
@@ -184,6 +209,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'grab',
+    touchAction: 'pan-y',
   },
   choiceArea: {
     display: 'flex',
@@ -193,7 +219,7 @@ const styles = {
   choiceButton: {
     flex: 1,
     minHeight: '70px',
-    padding: '12px 14px',
+    padding: '12px 32px',
     borderRadius: '16px',
     display: 'flex',
     flexDirection: 'row' as const,
@@ -207,33 +233,51 @@ const styles = {
     backgroundColor: '#ffffff',
     color: 'var(--text-primary)',
     textAlign: 'center' as const,
+    userSelect: 'none' as const,
+    WebkitUserSelect: 'none' as const,
+    position: 'relative' as const,
   },
   leftButton: {
-    borderLeft: '4px solid var(--text-secondary)',
+    borderLeftWidth: '4px',
+    borderLeftStyle: 'solid' as const,
+    borderLeftColor: 'var(--text-secondary)',
   },
   rightButton: {
-    borderRight: '4px solid var(--accent-color)',
+    borderRightWidth: '4px',
+    borderRightStyle: 'solid' as const,
+    borderRightColor: 'var(--accent-color)',
   },
   highlightLeft: {
     transform: 'scale(1.03)',
     backgroundColor: '#fafbfc',
-    borderColor: 'var(--text-secondary)',
+    borderLeftColor: 'var(--text-secondary)',
     boxShadow: 'var(--shadow-md)',
   },
   highlightRight: {
     transform: 'scale(1.03)',
     backgroundColor: '#f6f9f7',
-    borderColor: 'var(--accent-color)',
+    borderRightColor: 'var(--accent-color)',
     boxShadow: 'var(--shadow-md)',
   },
   arrow: {
+    position: 'absolute' as const,
+    top: '50%',
+    transform: 'translateY(-50%)',
     fontSize: '1rem',
     fontWeight: 600,
     opacity: 0.7,
   },
+  arrowLeft: {
+    left: '12px',
+  },
+  arrowRight: {
+    right: '12px',
+  },
   label: {
     flex: 1,
-    lineHeight: '1.4',
+    lineHeight: 1.35,
+    wordBreak: 'keep-all' as const,
+    overflowWrap: 'anywhere' as const,
   },
   lifeActionArea: {
     display: 'flex',

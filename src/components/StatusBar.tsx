@@ -3,9 +3,11 @@ import type { LifeStatus } from '../types/game';
 
 interface StatusBarProps {
   lifeStatus: LifeStatus;
+  turnCount: number;
+  targetTurns: number;
 }
 
-export const StatusBar: React.FC<StatusBarProps> = ({ lifeStatus }) => {
+export const StatusBar: React.FC<StatusBarProps> = ({ lifeStatus, turnCount, targetTurns }) => {
   // ステータスを日本語の読みやすいラベルに変換する
   const getMaritalLabel = (status: LifeStatus['maritalStatus']) => {
     switch (status) {
@@ -78,6 +80,18 @@ export const StatusBar: React.FC<StatusBarProps> = ({ lifeStatus }) => {
 
   return (
     <div style={styles.container}>
+      <div style={styles.progressRow}>
+        <span style={styles.progressLabel}>人生の選択</span>
+        <span style={styles.progressValue}>{Math.min(turnCount + 1, targetTurns)} / {targetTurns}</span>
+      </div>
+      <div style={styles.progressTrack}>
+        <div
+          style={{
+            ...styles.progressFill,
+            width: `${Math.min(100, (turnCount / targetTurns) * 100)}%`
+          }}
+        />
+      </div>
       <div style={styles.row}>
         <span style={{ ...styles.chip, ...styles.ageChip }}>
           {lifeStatus.age} 歳
@@ -104,6 +118,33 @@ const styles = {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '8px',
+  },
+  progressRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: '0.72rem',
+    color: 'var(--text-secondary)',
+    fontWeight: 600,
+  },
+  progressLabel: {
+    letterSpacing: '0.5px',
+  },
+  progressValue: {
+    color: 'var(--accent-color)',
+  },
+  progressTrack: {
+    width: '100%',
+    height: '5px',
+    borderRadius: '999px',
+    backgroundColor: '#ece9e3',
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: '999px',
+    backgroundColor: 'var(--accent-color)',
+    transition: 'width 0.28s ease',
   },
   row: {
     display: 'flex',

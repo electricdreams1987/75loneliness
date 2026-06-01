@@ -23,7 +23,9 @@ function App() {
       ...INITIAL_STATE,
       seenEventIds: [],
       history: [],
-      flags: { has_old_friends: true }
+      flags: { has_old_friends: true },
+      turnCount: 0,
+      targetTurns: INITIAL_STATE.targetTurns
     };
     setPlayerState(freshState);
     
@@ -67,7 +69,12 @@ function App() {
     const nextSeenIds = [...playerState.seenEventIds, activeEvent.id];
     
     // 年齢の進捗
-    const nextAge = advanceAge(playerState.lifeStatus.age);
+    const nextTurnCount = playerState.turnCount + 1;
+    const nextAge = advanceAge(
+      playerState.lifeStatus.age,
+      nextTurnCount,
+      playerState.targetTurns
+    );
 
     nextState = {
       ...nextState,
@@ -76,7 +83,8 @@ function App() {
         age: nextAge
       },
       seenEventIds: nextSeenIds,
-      history: [...playerState.history, historyEntry]
+      history: [...playerState.history, historyEntry],
+      turnCount: nextTurnCount
     };
 
     setPlayerState(nextState);
@@ -86,12 +94,16 @@ function App() {
 
     // 0.3秒後（カードが消えるアニメーション後）に次のイベントを表示
     setTimeout(() => {
-      if (nextAge >= 75) {
+      if (nextAge >= 75 || nextTurnCount >= nextState.targetTurns) {
         setScreen('result');
         setCoolDownActive(false);
       } else {
         const nextEvent = getNextEvent(nextState, nextFollowUpId);
-        setActiveEvent(nextEvent);
+        if (nextEvent) {
+          setActiveEvent(nextEvent);
+        } else {
+          setScreen('result');
+        }
         setCoolDownActive(false);
       }
     }, 350);
@@ -115,7 +127,12 @@ function App() {
     const nextSeenIds = [...playerState.seenEventIds, activeEvent.id];
     
     // 年齢の進捗
-    const nextAge = advanceAge(playerState.lifeStatus.age);
+    const nextTurnCount = playerState.turnCount + 1;
+    const nextAge = advanceAge(
+      playerState.lifeStatus.age,
+      nextTurnCount,
+      playerState.targetTurns
+    );
 
     nextState = {
       ...nextState,
@@ -123,7 +140,8 @@ function App() {
         ...nextState.lifeStatus,
         age: nextAge
       },
-      seenEventIds: nextSeenIds
+      seenEventIds: nextSeenIds,
+      turnCount: nextTurnCount
     };
 
     setPlayerState(nextState);
@@ -132,12 +150,16 @@ function App() {
     const nextFollowUpId = activeEvent.followUpEventIds?.[0] || null;
 
     setTimeout(() => {
-      if (nextAge >= 75) {
+      if (nextAge >= 75 || nextTurnCount >= nextState.targetTurns) {
         setScreen('result');
         setCoolDownActive(false);
       } else {
         const nextEvent = getNextEvent(nextState, nextFollowUpId);
-        setActiveEvent(nextEvent);
+        if (nextEvent) {
+          setActiveEvent(nextEvent);
+        } else {
+          setScreen('result');
+        }
         setCoolDownActive(false);
       }
     }, 350);
@@ -168,8 +190,12 @@ function App() {
 
       {screen === 'playing' && activeEvent && (
         <div style={styles.gamePlayArea}>
-          <StatusBar lifeStatus={playerState.lifeStatus} />
-          
+          <StatusBar
+            lifeStatus={playerState.lifeStatus}
+            turnCount={playerState.turnCount}
+            targetTurns={playerState.targetTurns}
+          />
+
           <EventCard 
             event={activeEvent} 
             dragOffset={dragOffset} 

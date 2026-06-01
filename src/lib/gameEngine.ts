@@ -2,6 +2,11 @@ import type { PlayerState, GameEvent, LifeStatus, PlayerStats } from '../types/g
 import { lifeEvents } from '../data/lifeEvents';
 import { events } from '../data/events';
 import { randomEvents } from '../data/randomEvents';
+import { adaptiveEvents } from '../data/adaptiveEvents';
+
+const START_AGE = 18;
+const END_AGE = 75;
+export const TARGET_TURNS = 100;
 
 export const INITIAL_STATE: PlayerState = {
   lifeStatus: {
@@ -32,7 +37,9 @@ export const INITIAL_STATE: PlayerState = {
   flags: {
     has_old_friends: true, // デフォルトで古い友人がいるフラグ
   },
-  seenEventIds: []
+  seenEventIds: [],
+  turnCount: 0,
+  targetTurns: TARGET_TURNS
 };
 
 // 条件判定ヘルパー
@@ -105,8 +112,8 @@ export function checkConditions(event: GameEvent, state: PlayerState): boolean {
 export function getNextEvent(state: PlayerState, activeFollowUpId: string | null): GameEvent | null {
   const currentAge = state.lifeStatus.age;
 
-  if (currentAge >= 75) {
-    return null; // 75歳で終了
+  if (currentAge >= END_AGE || state.turnCount >= state.targetTurns) {
+    return null; // 75歳または目標質問数で終了
   }
 
   // 1. アクティブなフォローアップ質問があればそれを最優先
@@ -116,13 +123,39 @@ export function getNextEvent(state: PlayerState, activeFollowUpId: string | null
     if (fup) return fup;
   }
 
-  // 年代フィルター
   const filterByAge = (e: GameEvent) => {
     const range = e.ageRange || [18, 75];
     return currentAge >= range[0] && currentAge <= range[1];
   };
 
-  // 2. ライフイベントの選定（未発生かつ条件を満たすもの）
+  const pickOne = (list: GameEvent[]) => {
+    const idx = Math.floor(Math.random() * list.length);
+    return list[idx];
+  };
+
+  const availableRandomEvents = randomEvents.filter(e => 
+    !state.seenEventIds.includes(e.id) && 
+    filterByAge(e) && 
+    checkConditions(e, state)
+  );
+
+  // 2. こちらの選択とは別に起こる出来事。一定確率で人生イベントより先に割り込む。
+  if (availableRandomEvents.length > 0 && Math.random() < 0.24) {
+    return pickOne(availableRandomEvents);
+  }
+
+  // 3. 現在のステータスに反応する質問。弱点や積み上げた資本に合わせて出す。
+  const availableAdaptiveEvents = adaptiveEvents.filter(e =>
+    !state.seenEventIds.includes(e.id) &&
+    filterByAge(e) &&
+    checkConditions(e, state)
+  );
+
+  if (availableAdaptiveEvents.length > 0) {
+    return pickOne(availableAdaptiveEvents);
+  }
+
+  // 4. ライフイベントの選定（未発生かつ条件を満たすもの）
   const availableLifeEvents = lifeEvents.filter(e => 
     !state.seenEventIds.includes(e.id) && 
     filterByAge(e) && 
@@ -130,26 +163,10 @@ export function getNextEvent(state: PlayerState, activeFollowUpId: string | null
   );
 
   if (availableLifeEvents.length > 0) {
-    // ランダムに1つ選定
-    const idx = Math.floor(Math.random() * availableLifeEvents.length);
-    return availableLifeEvents[idx];
+    return pickOne(availableLifeEvents);
   }
 
-  // 3. ランダムイベントの選定（低確率 15% で発生、条件合致、未発生のもの）
-  const dice = Math.random();
-  if (dice < 0.18) {
-    const availableRandomEvents = randomEvents.filter(e => 
-      !state.seenEventIds.includes(e.id) && 
-      filterByAge(e) && 
-      checkConditions(e, state)
-    );
-    if (availableRandomEvents.length > 0) {
-      const idx = Math.floor(Math.random() * availableRandomEvents.length);
-      return availableRandomEvents[idx];
-    }
-  }
-
-  // 4. 通常の質問イベントの選定（未発生、条件合致するもの）
+  // 5. 通常の質問イベントの選定（未発生、条件合致するもの）
   const availableEvents = events.filter(e => 
     !state.seenEventIds.includes(e.id) && 
     filterByAge(e) && 
@@ -157,15 +174,18 @@ export function getNextEvent(state: PlayerState, activeFollowUpId: string | null
   );
 
   if (availableEvents.length > 0) {
-    const idx = Math.floor(Math.random() * availableEvents.length);
-    return availableEvents[idx];
+    return pickOne(availableEvents);
+  }
+
+  // 6. 割り込み機会を逃したランダムイベントを最後に拾う。
+  if (availableRandomEvents.length > 0) {
+    return pickOne(availableRandomEvents);
   }
 
   // 条件に合うイベントが全くない場合、年齢に合う任意の通常イベントを探す（フォールバック）
   const fallbackEvents = events.filter(e => filterByAge(e));
   if (fallbackEvents.length > 0) {
-    const idx = Math.floor(Math.random() * fallbackEvents.length);
-    return fallbackEvents[idx];
+    return pickOne(fallbackEvents);
   }
 
   return null;
@@ -222,25 +242,11 @@ export function applyEffects(
 }
 
 // 年齢進行の判定ロジック
-export function advanceAge(currentAge: number): number {
-  if (currentAge >= 75) return 75;
+export function advanceAge(currentAge: number, completedTurns: number, targetTurns: number = TARGET_TURNS): number {
+  if (currentAge >= END_AGE || completedTurns >= targetTurns) return END_AGE;
 
-  // ライフステージに応じて、1回あたりの進み幅を調整し、45〜60ステップで75歳になるようにする
-  if (currentAge < 22) {
-    return currentAge + 1; // 18~22
-  } else if (currentAge < 30) {
-    return currentAge + 1; // 23~29
-  } else if (currentAge < 40) {
-    return currentAge + 1; // 30~39
-  } else if (currentAge < 50) {
-    // 40代はたまに2歳進む
-    return currentAge + (Math.random() < 0.3 ? 2 : 1);
-  } else if (currentAge < 60) {
-    return currentAge + (Math.random() < 0.4 ? 2 : 1);
-  } else if (currentAge < 70) {
-    return currentAge + (Math.random() < 0.4 ? 2 : 1);
-  } else {
-    // 70代は1歳ずつ慎重に
-    return currentAge + 1;
-  }
+  const progress = completedTurns / targetTurns;
+  const nextAge = Math.floor(START_AGE + (END_AGE - START_AGE) * progress);
+
+  return Math.max(currentAge, Math.min(END_AGE, nextAge));
 }

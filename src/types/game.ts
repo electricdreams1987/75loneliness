@@ -41,6 +41,8 @@ export interface PlayerState {
   history: HistoryEntry[];
   flags: Record<string, boolean>;
   seenEventIds: string[];
+  turnCount: number;
+  targetTurns: number;
 }
 
 export interface ChoiceEffects {
