@@ -192,6 +192,7 @@ function App() {
         <div style={styles.gamePlayArea}>
           <StatusBar
             lifeStatus={playerState.lifeStatus}
+            stats={playerState.stats}
             turnCount={playerState.turnCount}
             targetTurns={playerState.targetTurns}
           />

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { PlayerState, Ending } from '../types/game';
+import type { PlayerState, Ending, PlayerStats } from '../types/game';
 import { determineEnding } from '../data/endings';
 import { generateDailyScenario, extractKeyChoices } from '../lib/resultEngine';
 
@@ -31,30 +31,84 @@ export const ResultSummary: React.FC<ResultSummaryProps> = ({ state, onRestart }
     const m: Record<string, string> = { good: '健康良好', normal: '健康ふつう', anxious: '健康不安', needsSupport: '要支援' };
     return m[s] || s;
   };
+  const getLocalLabel = (s: string) => {
+    const m: Record<string, string> = { none: '地域接点なし', weak: '地域接点は薄い', medium: '地域接点あり', strong: '地域活動あり' };
+    return m[s] || s;
+  };
+  const getEmergencyLabel = (s: string) => {
+    const m: Record<string, string> = { none: '未登録', family: '家族', friend: '友人', neighbor: '近所', service: '支援窓口', multiple: '複数あり' };
+    return m[s] || s;
+  };
 
-  // 共有テキストの生成
-  const getShareText = () => {
-    const statusText = `【75歳の孤独 - 診断結果】
+  const statItems: { key: keyof PlayerStats; label: string }[] = [
+    { key: 'money', label: 'お金' },
+    { key: 'health', label: '健康' },
+    { key: 'career', label: 'キャリア' },
+    { key: 'freedom', label: '自由' },
+    { key: 'relationshipCapital', label: '人間関係' },
+    { key: 'familyCapital', label: '家族' },
+    { key: 'localCommunity', label: '地域とのつながり' },
+    { key: 'outsideWorkBelonging', label: '居場所' },
+    { key: 'emergencySupport', label: '緊急時の支え' },
+    { key: 'lonelinessRisk', label: '孤独リスク' },
+    { key: 'meaningCapital', label: '意味・役割' },
+    { key: 'nextGeneration', label: '次世代との関わり' },
+  ];
+
+  const lifeStatusLines = [
+    `・年齢: 75歳`,
+    `・配偶者: ${getMaritalLabel(state.lifeStatus.maritalStatus)}`,
+    `・子ども: ${state.lifeStatus.childrenCount}人`,
+    `・仕事: ${getJobLabel(state.lifeStatus.jobStatus)}`,
+    `・住まい: ${getHousingLabel(state.lifeStatus.housingStatus)}`,
+    `・健康: ${getHealthLabel(state.lifeStatus.healthStatus)}`,
+    `・地域: ${getLocalLabel(state.lifeStatus.localConnection)}`,
+    `・緊急連絡先: ${getEmergencyLabel(state.lifeStatus.emergencyContact)}`,
+  ];
+
+  const statLines = statItems.map(item => `・${item.label}: ${state.stats[item.key]}/30`);
+
+  const getDetailedShareText = () => `【75歳の孤独 - 詳細結果】
+
+■孤立リスクタイプ
+${ending.title}
+
+■エンディング説明
+${ending.description}
+
+■75歳時点の人生ステータス
+${lifeStatusLines.join('\n')}
+
+■主要な数値ステータス
+${statLines.join('\n')}
+
+■75歳のある一日
+${scenario}
+
+■人生に残った重要な選択
+${keyChoices.map(choice => `・${choice}`).join('\n')}
+
+■現実でできる小さな一歩
+${ending.actions.map(action => `・${action}`).join('\n')}
+
+#75歳の孤独 #人生シミュレーション`;
+
+  const getShortShareText = () => `【75歳の孤独 - 診断結果】
 私の75歳時点の孤立リスクタイプ：
 「${ending.title}」
 
 ■最終人生ステータス：
-・年齢: 75歳
-・配偶者: ${getMaritalLabel(state.lifeStatus.maritalStatus)}
-・仕事: ${getJobLabel(state.lifeStatus.jobStatus)}
-・住まい: ${getHousingLabel(state.lifeStatus.housingStatus)}
+${lifeStatusLines.slice(0, 5).join('\n')}
 
 ■75歳のある一日（一部）：
 ${scenario.split('\n\n')[0]}...
 
 あなたも18歳から75歳までの人生シミュレーションを体験してみませんか？
 #75歳の孤独 #人生シミュレーション`;
-    return statusText;
-  };
 
   // クリップボードへコピー
   const handleCopy = () => {
-    navigator.clipboard.writeText(getShareText()).then(() => {
+    navigator.clipboard.writeText(getDetailedShareText()).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
@@ -62,7 +116,7 @@ ${scenario.split('\n\n')[0]}...
 
   // X (Twitter) でシェア
   const handleShareX = () => {
-    const text = encodeURIComponent(getShareText());
+    const text = encodeURIComponent(getShortShareText());
     const url = `https://twitter.com/intent/tweet?text=${text}`;
     window.open(url, '_blank');
   };
@@ -86,10 +140,10 @@ ${scenario.split('\n\n')[0]}...
             {/* シェアボタン群 */}
             <div style={styles.shareGroup}>
               <button onClick={handleCopy} style={{...styles.shareBtn, ...styles.copyBtn}}>
-                {copied ? 'コピー完了！' : '結果をコピー'}
+                {copied ? 'コピー完了！' : '詳細結果をコピー'}
               </button>
               <button onClick={handleShareX} style={{...styles.shareBtn, ...styles.xBtn}}>
-                Xで結果をシェア
+                Xで短くシェア
               </button>
             </div>
           </div>
@@ -135,6 +189,19 @@ ${scenario.split('\n\n')[0]}...
                 {state.lifeStatus.emergencyContact === 'none' ? '未登録' : '登録あり'}
               </span>
             </div>
+          </div>
+        </div>
+
+        {/* セクション4: 主要な数値ステータス */}
+        <div style={styles.section}>
+          <h3 style={styles.sectionTitle}>主要な数値ステータス</h3>
+          <div style={styles.statusGrid}>
+            {statItems.map(item => (
+              <div key={item.key} style={styles.statusItem}>
+                <span style={styles.statusLabel}>{item.label}</span>
+                <span style={styles.statusValue}>{state.stats[item.key]} / 30</span>
+              </div>
+            ))}
           </div>
         </div>
 

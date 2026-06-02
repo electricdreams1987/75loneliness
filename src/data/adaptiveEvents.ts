@@ -14,7 +14,8 @@ export const adaptiveEvents: GameEvent[] = [
       {
         id: "go",
         label: "顔だけ出して関係を保つ",
-        effects: { relationshipCapital: 2, money: -2, lonelinessRisk: -1 }
+        effects: { relationshipCapital: 2, money: -2, lonelinessRisk: -1 },
+        flags: { socially_open: true }
       },
       {
         id: "skip",
@@ -38,7 +39,8 @@ export const adaptiveEvents: GameEvent[] = [
       {
         id: "reply",
         label: "今夜まとめて返信する",
-        effects: { relationshipCapital: 3, freedom: -1, lonelinessRisk: -1 }
+        effects: { relationshipCapital: 3, freedom: -1, lonelinessRisk: -1 },
+        flags: { socially_open: true }
       },
       {
         id: "work",
@@ -132,7 +134,8 @@ export const adaptiveEvents: GameEvent[] = [
       {
         id: "invite",
         label: "一人にだけ近況を送る",
-        effects: { relationshipCapital: 3, lonelinessRisk: -1 }
+        effects: { relationshipCapital: 3, lonelinessRisk: -1 },
+        flags: { socially_open: true }
       },
       {
         id: "scroll",
@@ -385,8 +388,8 @@ export const adaptiveEvents: GameEvent[] = [
   {
     id: "adaptive_family_high_70s_01",
     type: "choice",
-    title: "家族からの写真",
-    description: "家族から何気ない日常の写真が届いた。返信する？",
+    title: "親しい人からの写真",
+    description: "家族や親しい人から何気ない日常の写真が届いた。返信する？",
     ageRange: [70, 75],
     conditions: {
       minStats: { familyCapital: 10 }

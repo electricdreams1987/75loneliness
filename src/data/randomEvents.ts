@@ -57,7 +57,8 @@ export const randomEvents: GameEvent[] = [
       {
         id: "meet",
         label: "短時間だけでも会いに行く",
-        effects: { relationshipCapital: 4, money: -2, freedom: -1 }
+        effects: { relationshipCapital: 4, money: -2, freedom: -1 },
+        flags: { reconnected_friend: true, socially_open: true }
       },
       {
         id: "decline",

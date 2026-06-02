@@ -72,6 +72,7 @@ export interface EventConditions {
   localConnection?: ('none' | 'weak' | 'medium' | 'strong')[];
   emergencyContact?: ('none' | 'family' | 'friend' | 'neighbor' | 'service' | 'multiple')[];
   requiredFlags?: string[];
+  anyRequiredFlags?: string[];
   excludedFlags?: string[];
   minStats?: Partial<PlayerStats>;
   maxStats?: Partial<PlayerStats>;

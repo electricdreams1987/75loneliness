@@ -84,6 +84,12 @@ export function checkConditions(event: GameEvent, state: PlayerState): boolean {
     }
   }
 
+  // いずれかのフラグが必要
+  if (conds.anyRequiredFlags) {
+    const hasAnyFlag = conds.anyRequiredFlags.some(flag => state.flags[flag]);
+    if (!hasAnyFlag) return false;
+  }
+
   // 除外フラグ
   if (conds.excludedFlags) {
     for (const flag of conds.excludedFlags) {
@@ -183,7 +189,7 @@ export function getNextEvent(state: PlayerState, activeFollowUpId: string | null
   }
 
   // 条件に合うイベントが全くない場合、年齢に合う任意の通常イベントを探す（フォールバック）
-  const fallbackEvents = events.filter(e => filterByAge(e));
+  const fallbackEvents = events.filter(e => filterByAge(e) && checkConditions(e, state));
   if (fallbackEvents.length > 0) {
     return pickOne(fallbackEvents);
   }

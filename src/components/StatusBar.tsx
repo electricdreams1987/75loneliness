@@ -1,13 +1,14 @@
 import React from 'react';
-import type { LifeStatus } from '../types/game';
+import type { LifeStatus, PlayerStats } from '../types/game';
 
 interface StatusBarProps {
   lifeStatus: LifeStatus;
+  stats: PlayerStats;
   turnCount: number;
   targetTurns: number;
 }
 
-export const StatusBar: React.FC<StatusBarProps> = ({ lifeStatus, turnCount, targetTurns }) => {
+export const StatusBar: React.FC<StatusBarProps> = ({ lifeStatus, stats, turnCount, targetTurns }) => {
   // ステータスを日本語の読みやすいラベルに変換する
   const getMaritalLabel = (status: LifeStatus['maritalStatus']) => {
     switch (status) {
@@ -78,6 +79,21 @@ export const StatusBar: React.FC<StatusBarProps> = ({ lifeStatus, turnCount, tar
     }
   };
 
+  const statItems: { key: keyof PlayerStats; label: string; danger?: boolean }[] = [
+    { key: 'money', label: 'お金' },
+    { key: 'health', label: '健康' },
+    { key: 'career', label: 'キャリア' },
+    { key: 'freedom', label: '自由' },
+    { key: 'relationshipCapital', label: '人間関係' },
+    { key: 'familyCapital', label: '家族' },
+    { key: 'localCommunity', label: '地域' },
+    { key: 'outsideWorkBelonging', label: '居場所' },
+    { key: 'emergencySupport', label: '緊急支え' },
+    { key: 'lonelinessRisk', label: '孤独リスク', danger: true },
+  ];
+
+  const getBarWidth = (value: number) => `${Math.min(100, Math.max(0, (value / 30) * 100))}%`;
+
   return (
     <div style={styles.container}>
       <div style={styles.progressRow}>
@@ -105,6 +121,25 @@ export const StatusBar: React.FC<StatusBarProps> = ({ lifeStatus, turnCount, tar
         <span style={styles.chip}>{getHealthLabel(lifeStatus.healthStatus)}</span>
         <span style={styles.chip}>{getLocalLabel(lifeStatus.localConnection)}</span>
         <span style={styles.chip}>{getEmergencyLabel(lifeStatus.emergencyContact)}</span>
+      </div>
+      <div style={styles.statsGrid}>
+        {statItems.map(item => (
+          <div key={item.key} style={styles.statItem}>
+            <div style={styles.statHeader}>
+              <span style={styles.statLabel}>{item.label}</span>
+              <span style={styles.statValue}>{stats[item.key]}</span>
+            </div>
+            <div style={styles.statTrack}>
+              <div
+                style={{
+                  ...styles.statFill,
+                  ...(item.danger ? styles.dangerFill : {}),
+                  width: getBarWidth(stats[item.key])
+                }}
+              />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -151,6 +186,58 @@ const styles = {
     flexWrap: 'wrap' as const,
     gap: '6px',
     justifyContent: 'flex-start',
+  },
+  statsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: '7px',
+    marginTop: '2px',
+  },
+  statItem: {
+    minWidth: 0,
+    padding: '6px 8px',
+    backgroundColor: '#fbfaf7',
+    border: '1px solid #e8e6e0',
+    borderRadius: '10px',
+    boxShadow: 'var(--shadow-sm)',
+  },
+  statHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '6px',
+    marginBottom: '4px',
+  },
+  statLabel: {
+    minWidth: 0,
+    fontSize: '0.68rem',
+    color: 'var(--text-secondary)',
+    fontWeight: 600,
+    whiteSpace: 'nowrap' as const,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  statValue: {
+    fontSize: '0.68rem',
+    color: 'var(--text-primary)',
+    fontWeight: 700,
+    fontVariantNumeric: 'tabular-nums' as const,
+  },
+  statTrack: {
+    width: '100%',
+    height: '4px',
+    borderRadius: '999px',
+    backgroundColor: '#ece9e3',
+    overflow: 'hidden',
+  },
+  statFill: {
+    height: '100%',
+    borderRadius: '999px',
+    backgroundColor: 'var(--accent-color)',
+    transition: 'width 0.25s ease',
+  },
+  dangerFill: {
+    backgroundColor: 'var(--danger-color)',
   },
   chip: {
     display: 'inline-flex',

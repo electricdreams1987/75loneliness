@@ -45,7 +45,10 @@ export const lifeEvents: GameEvent[] = [
     description: "お互いの気持ちが通じ合い、交際が始まった。誰かと時間を分け合う日々。",
     ageRange: [23, 35],
     conditions: {
-      maritalStatus: ["single"]
+      maritalStatus: ["single"],
+      anyRequiredFlags: ["socially_open", "relationship_prioritized", "open_to_relationship", "reconnected_friend"],
+      excludedFlags: ["romance_closed"],
+      minStats: { relationshipCapital: 8 }
     },
     effects: {
       relationshipCapital: 4,
@@ -84,7 +87,9 @@ export const lifeEvents: GameEvent[] = [
     description: "パートナーと人生を共に歩む約束をし、婚姻届を出した。これからは二人の生活。",
     ageRange: [24, 40],
     conditions: {
-      maritalStatus: ["dating"]
+      maritalStatus: ["dating"],
+      requiredFlags: ["ready_to_marry"],
+      minStats: { familyCapital: 6 }
     },
     effects: {
       familyCapital: 8,
@@ -106,7 +111,9 @@ export const lifeEvents: GameEvent[] = [
     ageRange: [30, 45],
     conditions: {
       maritalStatus: ["married"],
-      childrenCountMax: 2
+      childrenCountMax: 2,
+      requiredFlags: ["open_to_family"],
+      excludedFlags: ["childfree_path"]
     },
     effects: {
       familyCapital: 10,
@@ -128,7 +135,8 @@ export const lifeEvents: GameEvent[] = [
     description: "選択か偶然か、子どもを持たないライフプランが確定した。自分の時間をどう使うか。",
     ageRange: [40, 49],
     conditions: {
-      childrenCountMax: 0
+      childrenCountMax: 0,
+      excludedFlags: ["open_to_family"]
     },
     effects: {
       freedom: 3,
@@ -319,7 +327,9 @@ export const lifeEvents: GameEvent[] = [
     description: "同じ家で暮らしているが、すれ違いが多く必要最低限の業務連絡しか交わさなくなっている。",
     ageRange: [50, 65],
     conditions: {
-      maritalStatus: ["married"]
+      maritalStatus: ["married"],
+      excludedFlags: ["partner_relationship_good"],
+      maxStats: { familyCapital: 7 }
     },
     effects: {
       familyCapital: -3,
@@ -403,6 +413,7 @@ export const lifeEvents: GameEvent[] = [
     ageRange: [60, 69],
     conditions: {
       maritalStatus: ["married"],
+      requiredFlags: ["partner_relationship_distant"],
       maxStats: { familyCapital: 5 }
     },
     effects: {

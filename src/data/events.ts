@@ -61,7 +61,7 @@ export const events: GameEvent[] = [
         id: "hangout",
         label: "友達と遊びに行く",
         effects: { relationshipCapital: 3, money: -2 },
-        flags: { has_old_friends: true }
+        flags: { has_old_friends: true, socially_open: true }
       },
       {
         id: "hobby",
@@ -85,7 +85,8 @@ export const events: GameEvent[] = [
       {
         id: "go_drink",
         label: "一杯だけ付き合う",
-        effects: { relationshipCapital: 3, health: -1, freedom: -1 }
+        effects: { relationshipCapital: 3, health: -1, freedom: -1 },
+        flags: { socially_open: true }
       },
       {
         id: "go_home",
@@ -113,7 +114,8 @@ export const events: GameEvent[] = [
       {
         id: "decline",
         label: "断って約束を優先する",
-        effects: { freedom: 3, relationshipCapital: 2, career: -1 }
+        effects: { freedom: 3, relationshipCapital: 2, career: -1 },
+        flags: { relationship_prioritized: true }
       }
     ]
   },
@@ -129,7 +131,8 @@ export const events: GameEvent[] = [
       {
         id: "join",
         label: "スクールに入会する",
-        effects: { outsideWorkBelonging: 4, money: -3, relationshipCapital: 2 }
+        effects: { outsideWorkBelonging: 4, money: -3, relationshipCapital: 2 },
+        flags: { socially_open: true }
       },
       {
         id: "dont_join",
@@ -237,7 +240,7 @@ export const events: GameEvent[] = [
         id: "attend",
         label: "仕事を休んで参加する",
         effects: { relationshipCapital: 4, money: -2, career: -1 },
-        flags: { has_old_friends: true }
+        flags: { has_old_friends: true, reconnected_friend: true }
       },
       {
         id: "ignore",
@@ -391,12 +394,13 @@ export const events: GameEvent[] = [
         id: "future",
         label: "真面目に将来の話をする",
         effects: { familyCapital: 3, freedom: -1 },
-        flags: { ready_to_marry: true }
+        flags: { ready_to_marry: true, marriage_avoidant: false }
       },
       {
         id: "present",
         label: "今は今を楽しもうと流す",
-        effects: { freedom: 3, relationshipCapital: -1 }
+        effects: { freedom: 3, relationshipCapital: -1 },
+        flags: { ready_to_marry: false, marriage_avoidant: true }
       }
     ]
   },
@@ -430,13 +434,13 @@ export const events: GameEvent[] = [
         id: "discuss",
         label: "家事を徹底的に分担する",
         effects: { familyCapital: 3, health: 1 },
-        flags: { partner_relationship_good: true }
+        flags: { partner_relationship_good: true, partner_relationship_distant: false, open_to_family: true }
       },
       {
         id: "leave",
         label: "気づいた方がやることにして流す",
         effects: { freedom: 2, familyCapital: -2 },
-        flags: { partner_relationship_distant: true }
+        flags: { partner_relationship_distant: true, open_to_family: false }
       }
     ]
   },
@@ -470,12 +474,14 @@ export const events: GameEvent[] = [
       {
         id: "young",
         label: "後輩や若い人を手伝う",
-        effects: { nextGeneration: 4, outsideWorkBelonging: 2 }
+        effects: { nextGeneration: 4, outsideWorkBelonging: 2 },
+        flags: { childfree_path: true }
       },
       {
         id: "self",
         label: "自分の人生と時間を優先する",
-        effects: { freedom: 4, meaningCapital: 2 }
+        effects: { freedom: 4, meaningCapital: 2 },
+        flags: { childfree_path: true }
       }
     ]
   },
@@ -509,7 +515,8 @@ export const events: GameEvent[] = [
       {
         id: "keep",
         label: "プライベートの連絡先を交換する",
-        effects: { relationshipCapital: 4, freedom: 1 }
+        effects: { relationshipCapital: 4, freedom: 1 },
+        flags: { socially_open: true }
       },
       {
         id: "cut",
