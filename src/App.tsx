@@ -4,7 +4,7 @@ import { StatusBar } from './components/StatusBar';
 import { EventCard } from './components/EventCard';
 import { SwipeChoice } from './components/SwipeChoice';
 import { ResultSummary } from './components/ResultSummary';
-import { INITIAL_STATE, getNextEvent, applyEffects, advanceAge } from './lib/gameEngine';
+import { INITIAL_STATE, getNextEvent, applyEffects, applyAgingEffects, advanceAge } from './lib/gameEngine';
 
 type GameScreen = 'title' | 'playing' | 'result';
 
@@ -87,6 +87,8 @@ function App() {
       turnCount: nextTurnCount
     };
 
+    nextState = applyAgingEffects(nextState, playerState.lifeStatus.age, nextAge);
+
     setPlayerState(nextState);
 
     // フォローアップ質問または次のイベントの準備
@@ -143,6 +145,8 @@ function App() {
       seenEventIds: nextSeenIds,
       turnCount: nextTurnCount
     };
+
+    nextState = applyAgingEffects(nextState, playerState.lifeStatus.age, nextAge);
 
     setPlayerState(nextState);
 

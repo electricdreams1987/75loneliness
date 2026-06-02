@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { LifeStatus, PlayerStats } from '../types/game';
 
 interface StatusBarProps {
@@ -9,6 +9,8 @@ interface StatusBarProps {
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({ lifeStatus, stats, turnCount, targetTurns }) => {
+  const [statsOpen, setStatsOpen] = useState(false);
+
   // ステータスを日本語の読みやすいラベルに変換する
   const getMaritalLabel = (status: LifeStatus['maritalStatus']) => {
     switch (status) {
@@ -122,25 +124,38 @@ export const StatusBar: React.FC<StatusBarProps> = ({ lifeStatus, stats, turnCou
         <span style={styles.chip}>{getLocalLabel(lifeStatus.localConnection)}</span>
         <span style={styles.chip}>{getEmergencyLabel(lifeStatus.emergencyContact)}</span>
       </div>
-      <div style={styles.statsGrid}>
-        {statItems.map(item => (
-          <div key={item.key} style={styles.statItem}>
-            <div style={styles.statHeader}>
-              <span style={styles.statLabel}>{item.label}</span>
-              <span style={styles.statValue}>{stats[item.key]}</span>
+      <button
+        type="button"
+        onClick={() => setStatsOpen(open => !open)}
+        style={styles.statsToggle}
+        aria-expanded={statsOpen}
+      >
+        <span>ステータス</span>
+        <span style={styles.statsToggleMeta}>
+          健康 {stats.health} / 孤独 {stats.lonelinessRisk} {statsOpen ? '▲' : '▼'}
+        </span>
+      </button>
+      {statsOpen && (
+        <div style={styles.statsGrid}>
+          {statItems.map(item => (
+            <div key={item.key} style={styles.statItem}>
+              <div style={styles.statHeader}>
+                <span style={styles.statLabel}>{item.label}</span>
+                <span style={styles.statValue}>{stats[item.key]}</span>
+              </div>
+              <div style={styles.statTrack}>
+                <div
+                  style={{
+                    ...styles.statFill,
+                    ...(item.danger ? styles.dangerFill : {}),
+                    width: getBarWidth(stats[item.key])
+                  }}
+                />
+              </div>
             </div>
-            <div style={styles.statTrack}>
-              <div
-                style={{
-                  ...styles.statFill,
-                  ...(item.danger ? styles.dangerFill : {}),
-                  width: getBarWidth(stats[item.key])
-                }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -192,6 +207,29 @@ const styles = {
     gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
     gap: '7px',
     marginTop: '2px',
+  },
+  statsToggle: {
+    width: '100%',
+    minHeight: '34px',
+    padding: '7px 10px',
+    borderRadius: '10px',
+    border: '1px solid #e8e6e0',
+    backgroundColor: '#fbfaf7',
+    color: 'var(--text-primary)',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '10px',
+    fontSize: '0.75rem',
+    fontWeight: 700,
+    boxShadow: 'var(--shadow-sm)',
+  },
+  statsToggleMeta: {
+    minWidth: 0,
+    color: 'var(--text-secondary)',
+    fontSize: '0.7rem',
+    fontWeight: 600,
+    whiteSpace: 'nowrap' as const,
   },
   statItem: {
     minWidth: 0,

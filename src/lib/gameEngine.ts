@@ -21,7 +21,7 @@ export const INITIAL_STATE: PlayerState = {
   },
   stats: {
     money: 5,
-    health: 7,
+    health: 16,
     career: 1,
     freedom: 8,
     relationshipCapital: 5,
@@ -239,11 +239,57 @@ export function applyEffects(
     }
   }
 
+  if (effects?.health !== undefined && !lifeStatusEffects?.healthStatus) {
+    nextLifeStatus.healthStatus = getHealthStatusFromValue(nextStats.health);
+  }
+
   return {
     ...currentState,
     stats: nextStats,
     lifeStatus: nextLifeStatus,
     flags: nextFlags
+  };
+}
+
+function getHealthStatusFromValue(health: number): LifeStatus['healthStatus'] {
+  if (health >= 13) return 'good';
+  if (health >= 8) return 'normal';
+  if (health >= 4) return 'anxious';
+  return 'needsSupport';
+}
+
+function getAgingHealthPenalty(previousAge: number, nextAge: number): number {
+  let penalty = 0;
+
+  for (let age = previousAge + 1; age <= nextAge; age += 1) {
+    if (age >= 65 && age % 3 === 0) {
+      penalty += 1;
+    } else if (age >= 55 && age < 65 && age % 4 === 0) {
+      penalty += 1;
+    } else if (age >= 45 && age < 55 && age % 5 === 0) {
+      penalty += 1;
+    }
+  }
+
+  return penalty;
+}
+
+export function applyAgingEffects(state: PlayerState, previousAge: number, nextAge: number): PlayerState {
+  const healthPenalty = getAgingHealthPenalty(previousAge, nextAge);
+  if (healthPenalty <= 0) return state;
+
+  const nextHealth = Math.max(0, state.stats.health - healthPenalty);
+
+  return {
+    ...state,
+    stats: {
+      ...state.stats,
+      health: nextHealth,
+    },
+    lifeStatus: {
+      ...state.lifeStatus,
+      healthStatus: getHealthStatusFromValue(nextHealth),
+    },
   };
 }
 
