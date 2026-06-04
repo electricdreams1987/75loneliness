@@ -4,7 +4,15 @@ import { StatusBar } from './components/StatusBar';
 import { EventCard } from './components/EventCard';
 import { SwipeChoice } from './components/SwipeChoice';
 import { ResultSummary } from './components/ResultSummary';
-import { INITIAL_STATE, getNextEvent, applyEffects, applyAgingEffects, advanceAge } from './lib/gameEngine';
+import {
+  INITIAL_STATE,
+  getNextEvent,
+  getEventCategory,
+  getEventTopicKey,
+  applyEffects,
+  applyAgingEffects,
+  advanceAge
+} from './lib/gameEngine';
 
 type GameScreen = 'title' | 'playing' | 'result';
 
@@ -23,7 +31,7 @@ function App() {
       ...INITIAL_STATE,
       seenEventIds: [],
       history: [],
-      flags: { has_old_friends: true },
+      flags: { ...INITIAL_STATE.flags },
       turnCount: 0,
       targetTurns: INITIAL_STATE.targetTurns
     };
@@ -57,6 +65,8 @@ function App() {
     const historyEntry = {
       eventId: activeEvent.id,
       eventTitle: activeEvent.title,
+      category: getEventCategory(activeEvent),
+      topicKey: getEventTopicKey(activeEvent),
       age: playerState.lifeStatus.age,
       selectedChoiceId: choiceId,
       selectedChoiceLabel: choiceLabel,
@@ -100,7 +110,7 @@ function App() {
         setScreen('result');
         setCoolDownActive(false);
       } else {
-        const nextEvent = getNextEvent(nextState, nextFollowUpId);
+        const nextEvent = getNextEvent(nextState, nextFollowUpId, activeEvent);
         if (nextEvent) {
           setActiveEvent(nextEvent);
         } else {
@@ -122,7 +132,7 @@ function App() {
       playerState,
       activeEvent.effects || {},
       activeEvent.lifeStatusEffects,
-      {}
+      activeEvent.flags || {}
     );
 
     // 既読イベント追加
@@ -151,14 +161,14 @@ function App() {
     setPlayerState(nextState);
 
     // フォローアップ質問（ライフイベント直後）
-    const nextFollowUpId = activeEvent.followUpEventIds?.[0] || null;
+    const nextFollowUpIds = activeEvent.followUpEventIds || null;
 
     setTimeout(() => {
       if (nextAge >= 75 || nextTurnCount >= nextState.targetTurns) {
         setScreen('result');
         setCoolDownActive(false);
       } else {
-        const nextEvent = getNextEvent(nextState, nextFollowUpId);
+        const nextEvent = getNextEvent(nextState, nextFollowUpIds, activeEvent);
         if (nextEvent) {
           setActiveEvent(nextEvent);
         } else {

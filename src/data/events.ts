@@ -342,8 +342,6 @@ export const events: GameEvent[] = [
       }
     ]
   },
-
-  // ==================== ライフイベントのフォローアップ質問 ====================
   {
     id: "alone_choice_01",
     type: "choice",
@@ -389,6 +387,9 @@ export const events: GameEvent[] = [
     title: "恋人との週末の対話",
     description: "将来の話が少しずつ出るようになった。結婚についてどう切り出す？",
     ageRange: [23, 35],
+    conditions: {
+      maritalStatus: ["dating"]
+    },
     choices: [
       {
         id: "future",
@@ -410,6 +411,10 @@ export const events: GameEvent[] = [
     title: "失恋の夜",
     description: "どうしても眠れない、寂しい夜。どうしてこの時間を埋める？",
     ageRange: [23, 39],
+    conditions: {
+      maritalStatus: ["single"],
+      requiredFlags: ["relationship_ended"]
+    },
     choices: [
       {
         id: "call",
@@ -429,6 +434,10 @@ export const events: GameEvent[] = [
     title: "家事の分担ルール",
     description: "新生活のルール作り。日々の忙しい家事について話し合う必要がある。",
     ageRange: [24, 40],
+    conditions: {
+      maritalStatus: ["married"],
+      housingStatus: ["withPartner", "withFamily"]
+    },
     choices: [
       {
         id: "discuss",
@@ -450,17 +459,24 @@ export const events: GameEvent[] = [
     title: "子どもの夜泣きが続く",
     description: "睡眠不足が数週間続き、体も精神もボロボロになっている。今日の夜泣きにどう対応する？",
     ageRange: [30, 45],
+    conditions: {
+      childrenCountMin: 1,
+      maritalStatus: ["married", "divorced", "widowed"],
+      requiredFlags: ["has_infant_child"],
+      excludedFlags: ["childfree_path"]
+    },
     choices: [
       {
         id: "share",
         label: "交代で休むよう頼む",
         effects: { familyCapital: 4, health: 1, freedom: -1 },
-        flags: { parent_teamwork: true }
+        flags: { parent_teamwork: true, has_infant_child: false }
       },
       {
         id: "alone",
         label: "一人で抱えてあやす",
-        effects: { health: -3, familyCapital: -2, lonelinessRisk: 2 }
+        effects: { health: -3, familyCapital: -2, lonelinessRisk: 2 },
+        flags: { has_infant_child: false }
       }
     ]
   },
@@ -470,6 +486,10 @@ export const events: GameEvent[] = [
     title: "子どもを持たない選択の後",
     description: "自分の後継者や、次世代との関わりについて、どのような姿勢でいくか。",
     ageRange: [40, 49],
+    conditions: {
+      childrenCountMax: 0,
+      requiredFlags: ["childfree_path"]
+    },
     choices: [
       {
         id: "young",
@@ -491,6 +511,10 @@ export const events: GameEvent[] = [
     title: "新居のご近所付き合い",
     description: "新築の家に引っ越してきた。隣近所への挨拶回りをどうする？",
     ageRange: [30, 45],
+    conditions: {
+      maritalStatus: ["married"],
+      housingStatus: ["withFamily"]
+    },
     choices: [
       {
         id: "greet",
@@ -610,6 +634,9 @@ export const events: GameEvent[] = [
     title: "親の入院のお見舞い",
     description: "仕事が非常に立て込んでいる。実家のお見舞いにどう対応する？",
     ageRange: [40, 59],
+    conditions: {
+      requiredFlags: ["parent_alive"]
+    },
     choices: [
       {
         id: "visit",
@@ -667,6 +694,10 @@ export const events: GameEvent[] = [
     title: "子供の独立後の距離感",
     description: "子どもが家を出たあと、どれくらいの頻度で連絡を入れるか。",
     ageRange: [50, 65],
+    conditions: {
+      childrenCountMin: 1,
+      requiredFlags: ["has_child"]
+    },
     choices: [
       {
         id: "regular",
@@ -686,6 +717,11 @@ export const events: GameEvent[] = [
     title: "無言のリビング",
     description: "今日もテレビの音だけが響くリビング。何か会話を切り出す？",
     ageRange: [50, 65],
+    conditions: {
+      maritalStatus: ["married"],
+      requiredFlags: ["partner_relationship_distant"],
+      housingStatus: ["withPartner", "withFamily"]
+    },
     choices: [
       {
         id: "speak",
@@ -707,6 +743,9 @@ export const events: GameEvent[] = [
     title: "実家の整理",
     description: "親の遺品や実家の売却など、山積みの手続きが待っている。誰と相談して進める？",
     ageRange: [50, 69],
+    conditions: {
+      excludedFlags: ["parent_alive"]
+    },
     choices: [
       {
         id: "family",
@@ -726,6 +765,9 @@ export const events: GameEvent[] = [
     title: "希望退職に応じるか",
     description: "割増退職金は魅力的だが、再就職先が見つかる保証はない。どうする？",
     ageRange: [50, 59],
+    conditions: {
+      jobStatus: ["employee", "manager"]
+    },
     choices: [
       {
         id: "accept",
@@ -746,6 +788,9 @@ export const events: GameEvent[] = [
     title: "消えた居場所の代わり",
     description: "なじみの店がなくなり、外出の機会が減りそう。別の居場所を探しに行く？",
     ageRange: [50, 75],
+    conditions: {
+      localConnection: ["medium", "strong"]
+    },
     choices: [
       {
         id: "find",
@@ -765,6 +810,9 @@ export const events: GameEvent[] = [
     title: "第二の人生のスタート",
     description: "退職後、最初にどのような習慣を作る？",
     ageRange: [60, 69],
+    conditions: {
+      jobStatus: ["retired"]
+    },
     choices: [
       {
         id: "routine",
@@ -785,6 +833,10 @@ export const events: GameEvent[] = [
     title: "突きつけられた離婚届",
     description: "パートナーの真剣な表情。どう対応する？",
     ageRange: [60, 69],
+    conditions: {
+      maritalStatus: ["married"],
+      requiredFlags: ["partner_relationship_distant"]
+    },
     choices: [
       {
         id: "face",
@@ -806,6 +858,10 @@ export const events: GameEvent[] = [
     title: "離婚後の生活基盤",
     description: "一人暮らしのアパートへ引越し。周囲の知人や家族にこのことを打ち明ける？",
     ageRange: [65, 72],
+    conditions: {
+      maritalStatus: ["divorced"],
+      requiredFlags: ["divorced_path"]
+    },
     choices: [
       {
         id: "tell",
@@ -825,6 +881,10 @@ export const events: GameEvent[] = [
     title: "孫へのお祝いと関わり",
     description: "孫の面倒やサポートのために、週末は積極的に手伝いに行く？",
     ageRange: [60, 75],
+    conditions: {
+      childrenCountMin: 1,
+      requiredFlags: ["grandchild_related"]
+    },
     choices: [
       {
         id: "help",
@@ -835,6 +895,216 @@ export const events: GameEvent[] = [
         id: "watch",
         label: "送られてくる写真だけを眺める",
         effects: { freedom: 3, familyCapital: -1 }
+      }
+    ]
+  },
+  // ==================== 18歳〜 序盤の分岐・詳細連鎖質問 ====================
+  {
+    id: "start_education_choice_01",
+    type: "choice",
+    title: "高校卒業後の進路",
+    description: "将来について決める大事な岐路。大学や専門学校に進学するか、それとも就職など別の道を歩み始めるか。",
+    ageRange: [18, 19],
+    choices: [
+      {
+        id: "go_college",
+        label: "進学する（大学・専門学校）",
+        effects: { freedom: 2, money: -3 },
+        flags: { education_college: true, education_no_college: false },
+        followUpEventId: "early_career_college_01"
+      },
+      {
+        id: "no_college",
+        label: "進学しない（就職・その他）",
+        effects: { money: 2, career: 1 },
+        flags: { education_college: false, education_no_college: true },
+        followUpEventId: "early_career_no_college_01"
+      }
+    ],
+    once: true
+  },
+  {
+    id: "early_career_college_01",
+    type: "choice",
+    title: "キャンパスライフの拠点",
+    description: "進学が決まった。実家から通うか、それとも親元を離れて一人暮らしをするか。",
+    ageRange: [18, 20],
+    conditions: {
+      requiredFlags: ["education_college"]
+    },
+    choices: [
+      {
+        id: "leave_home",
+        label: "一人暮らしを始める",
+        effects: { freedom: 4, money: -4 },
+        flags: { left_parent_home: true, stayed_with_parents: false },
+        followUpEventId: "early_career_college_life_01"
+      },
+      {
+        id: "stay_home",
+        label: "実家から通う",
+        effects: { money: 3, familyCapital: 2 },
+        flags: { left_parent_home: false, stayed_with_parents: true },
+        followUpEventId: "early_career_college_life_01"
+      }
+    ],
+    once: true
+  },
+  {
+    id: "early_career_college_life_01",
+    type: "choice",
+    title: "学生生活の優先事項",
+    description: "日々の暮らしが本格的に始まった。授業や勉強を最優先にするか、サークルや人間関係を広げるか。",
+    ageRange: [18, 22],
+    conditions: {
+      requiredFlags: ["education_college"]
+    },
+    choices: [
+      {
+        id: "study_first",
+        label: "学業や専門知識の探求に専念",
+        effects: { career: 3, meaningCapital: 2 },
+        flags: { socially_open: false, socially_closed: true },
+        followUpEventId: "early_career_college_grad_01"
+      },
+      {
+        id: "friends_first",
+        label: "サークルや友人と交流を広げる",
+        effects: { relationshipCapital: 4, freedom: 2, money: -2 },
+        flags: { socially_open: true, socially_closed: false },
+        followUpEventId: "early_career_college_grad_01"
+      }
+    ],
+    once: true
+  },
+  {
+    id: "early_career_college_grad_01",
+    type: "choice",
+    title: "卒業が近づく進路決定",
+    description: "学生生活の終わりが迫る。安定した一般企業への就職を目指すか、フリーランスや起業といった独自の道を志すか。",
+    ageRange: [20, 24],
+    conditions: {
+      requiredFlags: ["education_college"]
+    },
+    choices: [
+      {
+        id: "stable_job",
+        label: "安定した企業に就職する",
+        effects: { career: 2, money: 2, freedom: -1 },
+        lifeStatusEffects: { jobStatus: "employee" },
+        flags: { early_worker: true, delayed_career_start: false }
+      },
+      {
+        id: "independent_path",
+        label: "フリーランスや起業を目指す",
+        effects: { freedom: 4, career: 1, money: -2 },
+        lifeStatusEffects: { jobStatus: "freelance" },
+        flags: { early_worker: false, delayed_career_start: true, aspire_independent: true }
+      }
+    ],
+    once: true
+  },
+  {
+    id: "early_career_no_college_01",
+    type: "choice",
+    title: "進学しない道の一歩",
+    description: "高校卒業後、すぐに就職活動をして社会人としてのキャリアをスタートするか、一旦様子を見て別の道を模索するか。",
+    ageRange: [18, 20],
+    conditions: {
+      requiredFlags: ["education_no_college"]
+    },
+    choices: [
+      {
+        id: "direct_worker",
+        label: "すぐ就職を目指す",
+        effects: { career: 3, money: 2 },
+        flags: { early_worker: true, delayed_career_start: false },
+        followUpEventId: "early_career_no_college_job_01"
+      },
+      {
+        id: "find_myself",
+        label: "就職せず、アルバイトや独自の道を模索",
+        effects: { freedom: 4, money: -1 },
+        flags: { early_worker: false, delayed_career_start: true, unstable_early_adulthood: true },
+        followUpEventId: "early_career_no_college_free_01"
+      }
+    ],
+    once: true
+  },
+  {
+    id: "early_career_no_college_job_01",
+    type: "choice",
+    title: "就職先の選定",
+    description: "働く決心をした。地元の安定した中小企業にするか、裁量の大きい急成長ベンチャーに挑戦するか。",
+    ageRange: [18, 22],
+    conditions: {
+      requiredFlags: ["early_worker", "education_no_college"]
+    },
+    choices: [
+      {
+        id: "local_stable",
+        label: "地元の安定企業でじっくり働く",
+        effects: { career: 2, money: 3, familyCapital: 2 },
+        lifeStatusEffects: { jobStatus: "employee" },
+        flags: { stayed_with_parents: true, left_parent_home: false }
+      },
+      {
+        id: "venture_challenge",
+        label: "ベンチャーに挑戦する",
+        effects: { career: 4, freedom: 1, health: -1 },
+        lifeStatusEffects: { jobStatus: "employee" },
+        flags: { aspire_independent: true, left_parent_home: true }
+      }
+    ],
+    once: true
+  },
+  {
+    id: "early_career_no_college_free_01",
+    type: "choice",
+    title: "独自の生活基盤の選択",
+    description: "定職に就かない生活が始まった。実家に残って夢やアルバイトに専念するか、自力でアパートを借りてバイト生活を送るか。",
+    ageRange: [18, 23],
+    conditions: {
+      requiredFlags: ["delayed_career_start", "education_no_college"]
+    },
+    choices: [
+      {
+        id: "parents_house",
+        label: "実家に残って夢を追う",
+        effects: { money: 2, familyCapital: 2 },
+        lifeStatusEffects: { jobStatus: "unemployed", housingStatus: "withParents" },
+        flags: { stayed_with_parents: true, left_parent_home: false }
+      },
+      {
+        id: "own_apartment",
+        label: "バイトをしながら一人暮らし",
+        effects: { freedom: 5, money: -3 },
+        lifeStatusEffects: { jobStatus: "freelance", housingStatus: "alone" },
+        flags: { left_parent_home: true, stayed_with_parents: false }
+      }
+    ],
+    once: true
+  },
+  // ==================== 超汎用内省イベント (フォールバック安全装置) ====================
+  {
+    id: "fallback_reflection_01",
+    type: "choice",
+    category: "reflection",
+    topicKey: "fallback_reflection",
+    isFallback: true,
+    title: "ふとした内省の時間",
+    description: "これまでの人生の歩みを静かに振り返る。少し疲れた心を整え、次のステップへ向かおう。",
+    ageRange: [18, 75],
+    choices: [
+      {
+        id: "focus_self",
+        label: "自分の時間を大切に過ごす",
+        effects: { freedom: 2, health: 1 }
+      },
+      {
+        id: "focus_others",
+        label: "身近な人とのつながりを意識する",
+        effects: { relationshipCapital: 2, meaningCapital: 1 }
       }
     ]
   },

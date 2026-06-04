@@ -27,6 +27,8 @@ export interface PlayerStats {
 export interface HistoryEntry {
   eventId: string;
   eventTitle: string;
+  category?: GameEvent['category'];
+  topicKey?: string;
   age: number;
   selectedChoiceId: string;
   selectedChoiceLabel: string;
@@ -83,10 +85,16 @@ export interface GameEvent {
   type: 'choice' | 'life_event';
   title: string;
   description: string;
+  category?: 'education' | 'career' | 'family' | 'partner' | 'children' | 'housing' | 'health' | 'friendship' | 'community' | 'emergency' | 'retirement' | 'reflection' | 'random';
+  topicKey?: string;
+  priority?: number;
+  cooldownTurns?: number;
+  isFallback?: boolean;
   ageRange?: [number, number];
   conditions?: EventConditions;
   effects?: Partial<PlayerStats>; // life_event用
   lifeStatusEffects?: Partial<LifeStatus> & { childrenCountDelta?: number }; // life_event用
+  flags?: Record<string, boolean>; // life_event用でフラグを直接立てる場合
   choices?: Choice[]; // choice用
   followUpEventIds?: string[]; // life_event用
   once?: boolean;

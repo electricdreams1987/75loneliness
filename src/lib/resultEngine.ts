@@ -4,49 +4,55 @@ import type { PlayerState, HistoryEntry } from '../types/game';
 export function generateDailyScenario(state: PlayerState): string {
   const stats = state.stats;
   const status = state.lifeStatus;
+
+  // 状態の矛盾を絶対に出さないための厳格なステータス判定
+  const isActuallyMarried = status.maritalStatus === 'married';
+  const hasChildren = status.childrenCount > 0;
   const isAlone = status.housingStatus === 'alone';
-  const livesWithPartner = status.maritalStatus === 'married' &&
+
+  const livesWithPartner = isActuallyMarried &&
     (status.housingStatus === 'withPartner' || status.housingStatus === 'withFamily');
-  const livesWithChildren = status.childrenCount > 0 && status.housingStatus === 'withFamily';
+
+  const livesWithChildren = !isAlone && hasChildren && status.housingStatus === 'withFamily';
 
   let morning: string;
   let afternoon: string;
   let evening: string;
   let night: string;
 
-  // 1. 朝の情景 (住まいと家族構成)
-  if (isAlone) {
+  // 1. 朝の情景 (住まいと家族構成) - lifeStatus最優先
+  if (livesWithPartner) {
+    if (stats.familyCapital >= 8) {
+      morning = "隣で起き出すパートナーの気配と共に朝が始まる。「おはよう」と言葉を交わし、今日のご飯について他愛もない話を交わす。";
+    } else {
+      morning = "静かに同じ屋根の下にパートナーはいるが、ほとんど会話のないまま朝食を済ませる。互いの干渉を避けるように、別々の部屋で過ごし始める。";
+    }
+  } else if (livesWithChildren) {
+    morning = "家族の足音や気配を感じながら朝を迎える。完全に一人ではない安心感がそこにはある。";
+  } else if (isAlone) {
     if (stats.meaningCapital >= 10) {
       morning = "朝日が差し込む静かな部屋で目が覚める。一人暮らしの朝は静かだが、自分で淹れるコーヒーの香りが心地よく、今日一日の予定に胸が少し弾む。";
     } else {
       morning = "しんと静まり返ったリビングで目を覚ます。テレビをつけてニュースの音で部屋を満たし、余りある一日の時間にどう折り合いをつけるか考える。";
     }
-  } else if (livesWithPartner) {
-    if (stats.familyCapital >= 8) {
-      morning = "隣で起き出すパートナーの気配と共に朝が始まる。「おはよう」と言葉を交わし、今日のご飯について他愛もない話を交わす。";
-    } else {
-      morning = "同じ屋根の下にパートナーはいるが、ほとんど会話のないまま朝食を済ませる。互いの干渉を避けるように、別々の部屋で過ごし始める。";
-    }
-  } else if (livesWithChildren) {
-    morning = "家族の足音や気配を感じながら朝を迎える。完全に一人ではない安心感がそこにはある。";
   } else if (status.housingStatus === 'shared' || status.housingStatus === 'seniorHousing') {
     morning = "同じ建物で暮らす人の気配を遠くに感じながら朝を迎える。深く関わる相手がいるかどうかは、自分から少し動けるかにかかっている。";
   } else {
-    morning = "長く暮らした部屋で朝を迎える。誰かの気配に頼るというより、自分の予定と小さな習慣で一日を始める。";
+    morning = "長く暮らした部屋で静かに朝を迎える。誰かの気配に頼るというより、自分の予定と小さな習慣で一日を始める。";
   }
 
-  // 2. 昼の情景 (地域接点と活動)
+  // 2. 昼の情景 (地域接点と活動) - localConnection最優先
   if (status.localConnection === 'strong' || status.localConnection === 'medium') {
     afternoon = "昼下がり、散歩や買い物で外へ出ると、近所の人や馴染みの店員から「こんにちは」と声をかけられる。立ち話で地域の他愛もない噂話を交わし、温かな繋がりを感じる。";
   } else {
     afternoon = "昼過ぎ、買い物にスーパーへ出かけるが、誰と言葉を交わすこともなくレジでセルフレジを操作して帰路につく。すれ違う人々は皆、自分の生活に忙しそうだ。";
   }
 
-  // 3. 夕方の情景 (緊急連絡先と安心感)
-  if (status.emergencyContact !== 'none' && stats.emergencySupport >= 8) {
-    evening = "夕方、ふと足腰の痛みを感じるが、スマートフォンの連絡先にはすぐに頼れる名前が並んでいる。何かあった時には、あの人たちが気づいてくれるという確かな安心感がある。";
-  } else if (status.emergencyContact === 'none') {
-    evening = "夕暮れ時、少し体調の異変を感じて不安がよぎる。緊急連絡先の欄は空欄のままであり、もし自分がここで倒れたとして、一体誰がいつ気づいてくれるのだろうかと静かな恐怖を覚える。";
+  // 3. 夕方の情景 (緊急連絡先と安心感) - emergencyContact最優先
+  if (status.emergencyContact === 'none' || stats.emergencySupport < 4) {
+    evening = "夕暮れ時、少し体調の異変を感じて不安がよぎる。緊急連絡先の欄は空欄、あるいは形骸化しており、もし自分がここで倒れたとして、一体誰がいつ気づいてくれるのだろうかと静かな恐怖を覚える。";
+  } else if (stats.emergencySupport >= 8) {
+    evening = "夕方、ふと足腰の痛みを感じるが、スマートフォンの連絡先にはすぐに頼れる名前が並んでいる。何かあった時には、あの人たちが見守り気づいてくれるという確かな安心感がある。";
   } else {
     evening = "夕暮れ時、少し体調の異変を感じて不安がよぎる。連絡先はあるものの、すぐ頼ってよいのか迷い、支えを日頃から確かめておく必要を感じる。";
   }

@@ -31,6 +31,9 @@ export const randomEvents: GameEvent[] = [
     title: "実家からの緊急コール",
     description: "夜中、実家の近所の人から親が倒れて緊急搬送されたと連絡が入った。どうする？",
     ageRange: [40, 75],
+    conditions: {
+      requiredFlags: ["parent_alive"]
+    },
     choices: [
       {
         id: "go",
@@ -116,7 +119,8 @@ export const randomEvents: GameEvent[] = [
     title: "パートナーの緊急入院",
     description: "パートナーが突然激しい腹痛を訴え救急車で運ばれた。仕事の重要な会議がある。",
     conditions: {
-      maritalStatus: ["married"]
+      maritalStatus: ["married"],
+      housingStatus: ["withPartner", "withFamily"]
     },
     choices: [
       {

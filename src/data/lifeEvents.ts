@@ -77,6 +77,13 @@ export const lifeEvents: GameEvent[] = [
     lifeStatusEffects: {
       maritalStatus: "single"
     },
+    flags: {
+      ready_to_marry: false,
+      partner_relationship_good: false,
+      partner_relationship_distant: false,
+      open_to_family: false,
+      relationship_ended: true
+    },
     followUpEventIds: ["breakup_choice_01"],
     once: true
   },
@@ -124,6 +131,11 @@ export const lifeEvents: GameEvent[] = [
     },
     lifeStatusEffects: {
       childrenCountDelta: 1
+    },
+    flags: {
+      has_child: true,
+      has_infant_child: true,
+      childfree_path: false
     },
     followUpEventIds: ["childcare_night_01"],
     once: true
@@ -268,6 +280,9 @@ export const lifeEvents: GameEvent[] = [
     title: "親が入院した",
     description: "故郷の親が倒れ、急きょ入院したとの連絡が入った。高齢化に伴う介護の問題が現実味を帯びる。",
     ageRange: [40, 59],
+    conditions: {
+      requiredFlags: ["parent_alive"]
+    },
     effects: {
       familyCapital: 1,
       health: -1,
@@ -344,10 +359,16 @@ export const lifeEvents: GameEvent[] = [
     title: "親を見送った",
     description: "長い闘病の末、親がこの世を去った。幼少期の記憶が駆け巡り、深い喪失感に包まれる。",
     ageRange: [50, 69],
+    conditions: {
+      requiredFlags: ["parent_alive"]
+    },
     effects: {
       familyCapital: -4,
       meaningCapital: 3,
       lonelinessRisk: 2
+    },
+    flags: {
+      parent_alive: false
     },
     followUpEventIds: ["parent_passed_choice_01"],
     once: true
@@ -442,6 +463,13 @@ export const lifeEvents: GameEvent[] = [
       maritalStatus: "divorced",
       housingStatus: "alone"
     },
+    flags: {
+      partner_relationship_good: false,
+      partner_relationship_distant: false,
+      ready_to_marry: false,
+      divorced_path: true,
+      lives_with_partner: false
+    },
     followUpEventIds: ["divorce_choice_01"],
     once: true
   },
@@ -458,6 +486,10 @@ export const lifeEvents: GameEvent[] = [
     effects: {
       nextGeneration: 6,
       familyCapital: 3
+    },
+    flags: {
+      grandchild_related: true,
+      has_grandchild: true
     },
     followUpEventIds: ["grandchild_choice_01"],
     once: true
